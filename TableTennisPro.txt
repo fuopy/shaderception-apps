@@ -1,0 +1,305 @@
+set uv = uv();
+
+set maxScore = 3;
+
+set wallTop = 1/32;
+set wallBottom = 31/32;
+set wallLeft = 1/32;
+set wallRight = 31/32;
+
+set unitSize = 1/64;
+
+set powerSample = self(float2(wallLeft - unitSize, wallTop - unitSize));
+set ballSample = self(float2(wallRight + unitSize, wallTop - unitSize));
+set leftPaddleSample = self(float2(wallLeft - unitSize, wallBottom + unitSize));
+set rightPaddleSample = self(float2(wallRight + unitSize, wallBottom + unitSize));
+
+set power = powerSample.x;
+
+set ballPos = ballSample.xy;
+set ballVel = ballSample.zw;
+set ballSize = float2(unitSize * 2, unitSize * 2);
+
+set leftPaddlePos = float2(wallLeft + unitSize * 3, leftPaddleSample.x);
+set leftPaddleSize = float2(unitSize * 2, unitSize * 8);
+set leftPaddleScore = leftPaddleSample.y;
+
+set rightPaddlePos = float2(wallRight - unitSize * 3, rightPaddleSample.x);
+set rightPaddleSize = float2(unitSize * 2, unitSize * 8);
+set rightPaddleScore = rightPaddleSample.y;
+
+set playerOneInput = axis().xy;
+set playerTwoInput = axis().zw;
+
+set textColor = float4(1, 1, 1, 0);
+
+fun pointbox(ax, ay, bx, by, bw, bh)
+{
+	(ax > bx) && (ax < bx + bw) && (ay > by) && (ay < by + bh)
+}
+
+fun hitbox(apos, asize, bpos, bsize)
+{
+	(apos.x + asize.x > bpos.x) && (apos.x < bpos.x + bsize.x) && (apos.y + asize.y > bpos.y) && (apos.y < bpos.y + bsize.y)
+}
+
+fun UpdatePower()
+{
+	if (power < 1)
+	{
+		set power = 1;
+	}
+	
+	float4(1, 0, 0, 0)
+}
+
+fun UpdateBall()
+{
+	if (power < 1)
+	{
+		set ballPos = float2(0.5, 0.5);
+		set ballVel = float2(0.01, 0.001);
+	}
+	
+	if (ballVel.x <= -128)
+	{
+		set ballVel = float2(-0.01, -0.001);
+	}
+	else if (ballVel.x >= 128)
+	{
+		set ballVel = float2(0.01, 0.001);
+	}
+	
+	set ballPos.y = ballPos.y + ballVel.y;
+	if (ballPos.y + ballSize.y > wallBottom)
+	{
+		set ballVel.y = -abs(ballVel.y);
+		set ballPos.y = wallBottom - ballSize.y;
+	}
+	else if (ballPos.y < wallTop)
+	{
+		set ballVel.y = abs(ballVel.y);
+		set ballPos.y = wallTop;
+	}
+	
+	if (hitbox(ballPos, ballSize, leftPaddlePos, leftPaddleSize))
+	{
+		if (ballVel.x < 0)
+		{
+			set ballVel.x = abs(ballVel.x);
+			set ballVel.y = 0.2 * (ballPos.y - (leftPaddlePos.y + leftPaddleSize.y/2));
+		}
+	}
+	
+	if (hitbox(ballPos, ballSize, rightPaddlePos, rightPaddleSize))
+	{
+		if (ballVel.x > 0)
+		{
+			set ballVel.x = -abs(ballVel.x);
+			set ballVel.y = 0.2 * (ballPos.y - (rightPaddlePos.y + rightPaddleSize.y/2));
+		}
+	}
+	
+	set ballPos.x = ballPos.x + ballVel.x;
+	if (ballPos.x + ballSize.x > wallRight)
+	{
+		set ballVel.x = -128;
+		set ballPos = float2(0.5, 0.5);
+	}
+	else if (ballPos.x < wallLeft)
+	{
+		set ballVel.x = 128;
+		set ballPos = float2(0.5, 0.5);
+	}
+	
+	float4(ballPos.x, ballPos.y, ballVel.x, ballVel.y)
+}
+
+fun UpdateLeftPaddle()
+{
+	if (power < 1)
+	{
+		set leftPaddleScore = 0;
+	}
+	if (ballVel.x >= 128)
+	{
+		set rightPaddleScore = rightPaddleScore + 1;
+	}
+	if (ballVel.x <= -128)
+	{
+		set leftPaddleScore = leftPaddleScore + 1;
+	}
+	if (leftPaddleScore > maxScore || rightPaddleScore > maxScore)
+	{
+		set leftPaddleScore = 0;
+		set rightPaddleScore = 0;
+	}
+	
+	if (playerOneInput.y > 0)
+	{
+		set leftPaddlePos.y = leftPaddlePos.y + 0.01;
+	}
+	else if (playerOneInput.y < 0)
+	{
+		set leftPaddlePos.y = leftPaddlePos.y - 0.01;
+	}
+	if (leftPaddlePos.y < wallTop)
+	{
+		set leftPaddlePos.y = wallTop;
+	}
+	else if (leftPaddlePos.y + leftPaddleSize.y > wallBottom)
+	{
+		set leftPaddlePos.y = wallBottom - leftPaddleSize.y;
+	}
+	float4(leftPaddlePos.y, leftPaddleScore, 0, 0)
+}
+
+fun UpdateRightPaddle()
+{
+	if (power < 1)
+	{
+		set rightPaddleScore = 0;
+	}
+	if (ballVel.x >= 128)
+	{
+		set rightPaddleScore = rightPaddleScore + 1;
+	}
+	if (ballVel.x <= -128)
+	{
+		set leftPaddleScore = leftPaddleScore + 1;
+	}
+	if (leftPaddleScore > maxScore || rightPaddleScore > maxScore)
+	{
+		set leftPaddleScore = 0;
+		set rightPaddleScore = 0;
+	}
+	if (rightPaddlePos.y + (rightPaddleSize.y / 2) < ballPos.y)
+	{
+		set rightPaddlePos.y = rightPaddlePos.y + 0.01;
+	}
+	else if (rightPaddlePos.y + (rightPaddleSize.y / 2) > ballPos.y + ballSize.y)
+	{
+		set rightPaddlePos.y = rightPaddlePos.y - 0.01;
+	}
+	if (rightPaddlePos.y < wallTop)
+	{
+		set rightPaddlePos.y = wallTop;
+	}
+	else if (rightPaddlePos.y + rightPaddleSize.y > wallBottom)
+	{
+		set rightPaddlePos.y = wallBottom - rightPaddleSize.y;
+	}
+	float4(rightPaddlePos.y, rightPaddleScore, 0, 0)
+}
+
+fun DrawBoard()
+{
+	if (pointbox(uv.x, uv.y, ballPos.x, ballPos.y, ballSize.x, ballSize.y))
+	{
+		float4(1, 0, 0, 0)
+	}
+	else if (pointbox(uv.x, uv.y, leftPaddlePos.x, leftPaddlePos.y, leftPaddleSize.x, leftPaddleSize.y))
+	{
+		float4(0, 1, 0, 0)
+	}
+	else if (pointbox(uv.x, uv.y, rightPaddlePos.x, rightPaddlePos.y, rightPaddleSize.x, rightPaddleSize.y))
+	{
+		float4(0, 0, 1, 0)
+	}
+	else if (uv.x > (unitSize.x * 32) && uv.x < (unitSize.x * 33))
+	{
+		float4(1, 1, 1, 0)
+	}
+	else if (uv.x < 0.5)
+	{
+		DrawDigit(28, 56, leftPaddleScore)
+	}
+	else
+	{
+		DrawDigit(34, 56, rightPaddleScore)
+	}
+}
+
+fun DrawGutter()
+{
+	float4(1, 1, 1, 0)
+}
+
+fun DrawDigit(inx, iny, digit)
+{
+	set x = floor(uv.x * 64) - inx;
+	set y = floor(uv.y * 64) - iny;
+	
+	if (x >= 0 && x <= 2)
+	{
+		if (digit == 0)
+		{
+			if (y == 4) { textColor }
+			else if (y == 3) { if (x != 1) { textColor } }
+			else if (y == 2) { if (x != 1) { textColor } }
+			else if (y == 1) { if (x != 1) { textColor } }
+			else if (y == 0) { textColor }
+		}
+		else if (digit == 1)
+		{
+			if (y == 4) { if (x == 1) { textColor } }
+			else if (y == 3) { if (x != 2) { textColor } }
+			else if (y == 2) { if (x == 1) { textColor } }
+			else if (y == 1) { if (x == 1) { textColor } }
+			else if (y == 0) { if (x == 1) { textColor } }
+		}
+		else if (digit == 2)
+		{
+			if (y == 4) { textColor }
+			else if (y == 3) { if (x == 2) { textColor } }
+			else if (y == 2) { textColor }
+			else if (y == 1) { if (x == 0) { textColor } }
+			else if (y == 0) { textColor }
+		}
+		else if (digit == 3)
+		{
+			if (y == 4) { textColor }
+			else if (y == 3) { if (x == 2) { textColor } }
+			else if (y == 2) { textColor }
+			else if (y == 1) { if (x == 2) { textColor } }
+			else if (y == 0) { textColor }
+		}
+	}
+}
+
+if (uv.y < wallTop)
+{
+	if (uv.x < wallLeft)
+	{
+		UpdatePower()
+	}
+	else if (uv.x > wallRight)
+	{
+		UpdateBall()
+	}
+	else
+	{
+		DrawGutter()
+	}
+}
+else if (uv.y > wallBottom)
+{
+	if (uv.x < wallLeft)
+	{
+		UpdateLeftPaddle()
+	}
+	else if (uv.x > wallRight)
+	{
+		UpdateRightPaddle()
+	}
+	else
+	{
+		DrawGutter()
+	}
+}
+else
+{
+	DrawBoard()
+}
+
+
