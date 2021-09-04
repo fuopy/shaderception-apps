@@ -1,0 +1,13 @@
+let o = 0.001;
+let tl = camera(uv() + float2(-o, -o));
+let t  = camera(uv() + float2( 0, -o));
+let tr = camera(uv() + float2( o, -o));
+let l  = camera(uv() + float2(-o,  0));
+let r  = camera(uv() + float2( o,  0));
+let bl = camera(uv() + float2(-o,  o));
+let b  = camera(uv() + float2( 0,  o));
+let br = camera(uv() + float2( o,  o));
+
+let gx = tl - tr + 2*l - 2*r + bl - br;
+let gy = tl + 2*t + tr - bl - 2*b - br;
+length(sqrt(gx*gx+gy*gy).xyz).xxx > 0.2
