@@ -192,39 +192,6 @@ fun UpdateRightPaddle()
 	float4(rightPaddlePos.y, rightPaddleScore, 0, 0)
 }
 
-fun DrawBoard()
-{
-	if (pointbox(uv.x, uv.y, ballPos.x, ballPos.y, ballSize.x, ballSize.y))
-	{
-		float4(1, 0, 0, 0)
-	}
-	else if (pointbox(uv.x, uv.y, leftPaddlePos.x, leftPaddlePos.y, leftPaddleSize.x, leftPaddleSize.y))
-	{
-		float4(0, 1, 0, 0)
-	}
-	else if (pointbox(uv.x, uv.y, rightPaddlePos.x, rightPaddlePos.y, rightPaddleSize.x, rightPaddleSize.y))
-	{
-		float4(0, 0, 1, 0)
-	}
-	else if (uv.x > (unitSize.x * 32) && uv.x < (unitSize.x * 33))
-	{
-		float4(1, 1, 1, 0)
-	}
-	else if (uv.x < 0.5)
-	{
-		DrawDigit(28, 56, leftPaddleScore)
-	}
-	else
-	{
-		DrawDigit(34, 56, rightPaddleScore)
-	}
-}
-
-fun DrawGutter()
-{
-	float4(1, 1, 1, 0)
-}
-
 fun DrawDigit(inx, iny, digit)
 {
 	set x = floor(uv.x * 64) - inx;
@@ -265,6 +232,39 @@ fun DrawDigit(inx, iny, digit)
 			else if (y == 0) { textColor }
 		}
 	}
+}
+
+fun DrawBoard()
+{
+	if (pointbox(uv.x, uv.y, ballPos.x, ballPos.y, ballSize.x, ballSize.y))
+	{
+		float4(1, 0, 0, 0)
+	}
+	else if (pointbox(uv.x, uv.y, leftPaddlePos.x, leftPaddlePos.y, leftPaddleSize.x, leftPaddleSize.y))
+	{
+		float4(0, 1, 0, 0)
+	}
+	else if (pointbox(uv.x, uv.y, rightPaddlePos.x, rightPaddlePos.y, rightPaddleSize.x, rightPaddleSize.y))
+	{
+		float4(0, 0, 1, 0)
+	}
+	else if (uv.x > (unitSize.x * 32) && uv.x < (unitSize.x * 33))
+	{
+		float4(1, 1, 1, 0)
+	}
+	else if (uv.x < 0.5)
+	{
+		DrawDigit(28, 56, leftPaddleScore)
+	}
+	else
+	{
+		DrawDigit(34, 56, rightPaddleScore)
+	}
+}
+
+fun DrawGutter()
+{
+	float4(1, 1, 1, 0)
 }
 
 if (uv.y < wallTop)
